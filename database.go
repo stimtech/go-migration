@@ -45,21 +45,25 @@ func New(dialect SqlDialect, connectionString string, logger *zap.Logger) (*Serv
 }
 
 // WithTableName changes the name of the migration table from 'migration'
-func (s *Service) WithTableName(name string) {
+func (s *Service) WithTableName(name string) *Service {
 	s.migrationTable = name
+	return s
 }
 
 // WithLockTableName changes the name of the migration lock table from 'migration_lock'
-func (s *Service) WithLockTableName(name string) {
+func (s *Service) WithLockTableName(name string) *Service {
 	s.migrationLockTable = name
+	return s
 }
 
 // WithFolder changes the location of migration sql files from 'db/migrations'
-func (s *Service) WithFolder(name string) {
+func (s *Service) WithFolder(name string) *Service {
 	s.migrationFolder = name
+	return s
 }
 
 // WithLockTimeoutMinutes changes the lock timout from 15 minutes
-func (s *Service) WithLockTimeoutMinutes(minutes int) {
+func (s *Service) WithLockTimeoutMinutes(minutes int) *Service {
 	s.lockTimeoutMinutes = minutes
+	return s
 }
