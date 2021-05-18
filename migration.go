@@ -105,22 +105,22 @@ func (s *Service) lock() (bool, func()) {
 }
 
 func (s *Service) fetchAppliedMigrations() (map[string]string, error) {
-	var migs []migration
+	var mig migration
 	rows, err := s.db.Query(fmt.Sprintf("select * from %s", s.migrationTable))
 	if err != nil {
 		return nil, err
 	}
 
-	err = rows.Scan(&migs)
+	migMap := make(map[string]string)
+
+	for rows.Next() {
+		err = rows.Scan(&mig.ID, &mig.Date, &mig.Checksum)
+		migMap[mig.ID] = mig.Checksum
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	migMap := make(map[string]string, len(migs))
-
-	for _, mig := range migs {
-		migMap[mig.ID] = mig.Checksum
-	}
 	return migMap, nil
 }
 
