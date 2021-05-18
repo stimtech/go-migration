@@ -1,4 +1,4 @@
-module tech.stim.se/go-migration
+module bitbucket.org/stimtech/go-migration
 
 go 1.15
 
