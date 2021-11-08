@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type SqlDialect string
@@ -15,6 +16,7 @@ type SqlDialect string
 const (
 	MySql      = SqlDialect("mysql")
 	PostGreSQL = SqlDialect("pgx")
+	Sqlite     = SqlDialect("sqlite3")
 )
 
 type Service struct {

@@ -10,13 +10,15 @@ import (
 	"go.uber.org/zap"
 )
 
-// To run these test you must have a mysql instance and a postgres instance running.
-// Run docker-compose up tp start them
+// To run these test you must have a mysql instance and a postgres instance running,
+// or comment out all databases except Sqlite.
+// Run docker-compose up to start mysql and postgres.
 
 func TestService_Migrate(t *testing.T) {
 	connectionStrings := map[SqlDialect]string{
 		MySql:      "mig:mig@tcp(127.0.0.1:3306)/mig?parseTime=true",
 		PostGreSQL: "postgresql://mig:mig@127.0.0.1:5432/mig",
+		Sqlite:     "mig.db",
 	}
 
 	for d, c := range connectionStrings {
@@ -36,7 +38,8 @@ func TestService_Migrate(t *testing.T) {
 			if err != nil {
 				assert.Fail(t, "could not query for tables")
 			}
-			assert.True(t, reflect.DeepEqual(tables, []string{"migration", "migration_lock", "test"}))
+			expectedTables := []string{"migration", "migration_lock", "test"}
+			assert.True(t, reflect.DeepEqual(tables, expectedTables), "%v should be %v", tables, expectedTables)
 
 		})
 
@@ -105,7 +108,9 @@ func getTableNames(s *Service, d SqlDialect) ([]string, error) {
 
 		for res.Next() {
 			var tn string
-			res.Scan(&tn)
+			if err := res.Scan(&tn); err != nil {
+				return nil, err
+			}
 			tables = append(tables, tn)
 		}
 	case PostGreSQL:
@@ -116,7 +121,22 @@ func getTableNames(s *Service, d SqlDialect) ([]string, error) {
 
 		for res.Next() {
 			var tn string
-			res.Scan(&tn)
+			if err := res.Scan(&tn); err != nil {
+				return nil, err
+			}
+			tables = append(tables, tn)
+		}
+	case Sqlite:
+		res, err := s.db.Query("select name from sqlite_master where type='table'")
+		if err != nil {
+			return nil, err
+		}
+
+		for res.Next() {
+			var tn string
+			if err := res.Scan(&tn); err != nil {
+				return nil, err
+			}
 			tables = append(tables, tn)
 		}
 	}
