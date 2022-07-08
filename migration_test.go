@@ -12,20 +12,20 @@ import (
 	"go.uber.org/zap"
 )
 
-type SqlDialect string
+type SQLDialect string
 
 const (
-	MySql      = SqlDialect("mysql")
-	PostGreSQL = SqlDialect("pgx")
-	Sqlite     = SqlDialect("sqlite3")
+	MySQL      = SQLDialect("mysql")
+	PostGreSQL = SQLDialect("pgx")
+	Sqlite     = SQLDialect("sqlite3")
 )
 
 // To run these tests on mysql and postgres, uncomment the connectionStrings
 // and start mysql and postgres using `docker-compose up`.
 
 func TestService_Migrate(t *testing.T) {
-	connectionStrings := map[SqlDialect]string{
-		//MySql:      "mig:mig@tcp(127.0.0.1:3306)/mig?parseTime=true",
+	connectionStrings := map[SQLDialect]string{
+		//MySQL:      "mig:mig@tcp(127.0.0.1:3306)/mig?parseTime=true",
 		//PostGreSQL: "postgresql://mig:mig@127.0.0.1:5432/mig",
 		Sqlite: "mig.db",
 	}
@@ -131,7 +131,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err, "could not query for tables") {
 				return
 			}
-			if d == MySql { // MySql can't roll back DDL statements
+			if d == MySQL { // MySQL can't roll back DDL statements
 				assert.Equal(t, []string{"migration", "migration_lock", "multi", "multi2", "should_rollback", "test"}, tables)
 			} else {
 				assert.Equal(t, []string{"migration", "migration_lock", "multi", "multi2", "test"}, tables)
@@ -177,10 +177,10 @@ func TestService_Migrate(t *testing.T) {
 	}
 }
 
-func getTableNames(s *Service, d SqlDialect) ([]string, error) {
+func getTableNames(s *Service, d SQLDialect) ([]string, error) {
 	var tables []string
 	switch d {
-	case MySql:
+	case MySQL:
 		res, err := s.db.Query("show tables")
 		if err != nil {
 			return nil, err
@@ -224,7 +224,7 @@ func getTableNames(s *Service, d SqlDialect) ([]string, error) {
 	return tables, nil
 }
 
-func dropTables(s *Service, d SqlDialect) {
+func dropTables(s *Service, d SQLDialect) {
 	tables, _ := getTableNames(s, d)
 	for _, t := range tables {
 		_, _ = s.db.Exec("drop table if exists " + t)

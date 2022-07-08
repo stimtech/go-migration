@@ -21,10 +21,6 @@ type Service struct {
 
 // New returns a new Database instance.
 func New(db *sql.DB, logger *zap.Logger) *Service {
-	// go-migrate needs two connections
-	if db.Stats().MaxOpenConnections == 1 {
-		db.SetMaxOpenConns(2)
-	}
 	return &Service{
 		logger:             logger.Named("go-migration"),
 		db:                 db,

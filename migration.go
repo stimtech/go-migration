@@ -152,7 +152,7 @@ func (s *Service) applyMigration(mig string) error {
 
 	s.logger.Info(fmt.Sprintf("applying migration: %s", mig))
 
-	// MySql transactions will not work with ALTER TABLE and other DDL statements. See this post for more details:
+	// MySQL transactions will not work with ALTER TABLE and other DDL statements. See this post for more details:
 	// https://stackoverflow.com/questions/22806261/can-i-use-transactions-with-alter-table
 	tx, err := s.db.Begin()
 	if err != nil {
