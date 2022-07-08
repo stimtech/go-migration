@@ -2,23 +2,11 @@ package migration
 
 import (
 	"database/sql"
-	"fmt"
 
 	"go.uber.org/zap"
-
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/jackc/pgx/v4/stdlib"
-	_ "github.com/mattn/go-sqlite3"
 )
 
-type SqlDialect string
-
-const (
-	MySql      = SqlDialect("mysql")
-	PostGreSQL = SqlDialect("pgx")
-	Sqlite     = SqlDialect("sqlite3")
-)
-
+// Service is the db migration service
 type Service struct {
 	logger             *zap.Logger
 	db                 *sql.DB
@@ -28,22 +16,16 @@ type Service struct {
 	lockTimeoutMinutes int
 }
 
-// New returns a new Database instance
-func New(dialect SqlDialect, connectionString string, logger *zap.Logger) (*Service, error) {
-	db, err := sql.Open(string(dialect), connectionString)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to create database connection for migration: %w", err)
-	}
-
+// New returns a new Database instance.
+func New(db *sql.DB, logger *zap.Logger) *Service {
 	return &Service{
-		logger:             logger,
+		logger:             logger.Named("go-migration"),
 		db:                 db,
 		migrationTable:     "migration",
 		migrationLockTable: "migration_lock",
 		migrationFolder:    "db/migrations",
 		lockTimeoutMinutes: 15,
-	}, nil
+	}
 }
 
 // WithTableName changes the name of the migration table from 'migration'

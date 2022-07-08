@@ -2,7 +2,7 @@
 version: '3'
 services:
   mysql:
-    container_name: mysql
+    container_name: mig-mysql
     image: mysql:5.7
     ports:
       - "3306:3306"
@@ -18,16 +18,12 @@ services:
       - ./test.ignore/sql:/docker-entrypoint-initdb.d
     tty: true
     healthcheck:
-      test:
-        - "CMD"
-        - "mysqladmin"
-        - "ping"
-        - "-h"
-        - "localhost"
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
 
   postgres:
+    container_name: mig-postgres
     image: "postgres" # use latest official postgres version
     ports:
       - "5432:5432"
