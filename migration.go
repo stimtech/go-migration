@@ -11,8 +11,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"go.uber.org/zap"
 )
 
 type migration struct {
@@ -152,7 +150,7 @@ func (s *Service) applyMigration(mig string) error {
 
 	requests := strings.Split(string(file), ";")
 
-	s.logger.Info("applying migration", zap.String("fileName", mig))
+	s.logger.Info(fmt.Sprintf("applying migration: %s", mig))
 
 	// MySql transactions will not work with ALTER TABLE and other DDL statements. See this post for more details:
 	// https://stackoverflow.com/questions/22806261/can-i-use-transactions-with-alter-table
@@ -167,7 +165,7 @@ func (s *Service) applyMigration(mig string) error {
 		}
 		_, err = tx.Exec(request)
 		if err != nil {
-			s.logger.Error("failing statement", zap.String("sql", request))
+			s.logger.Error(fmt.Sprintf("failing statement [%s]: %s", request, err.Error()))
 			if err := tx.Rollback(); err != nil {
 				s.logger.Warn("rollback failed")
 			}
