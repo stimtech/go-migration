@@ -4,12 +4,9 @@ import (
 	"database/sql"
 
 	"go.uber.org/zap"
-
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/jackc/pgx/v4/stdlib"
-	_ "github.com/mattn/go-sqlite3"
 )
 
+// Service is the db migration service
 type Service struct {
 	logger             *zap.Logger
 	db                 *sql.DB
