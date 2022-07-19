@@ -1,0 +1,39 @@
+name: Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  go-analyze:
+    name: Analyze Go
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Check out action
+        uses: actions/checkout@v2
+        with:
+          repository: stimtech/action-go-analyze
+          ref: v1.0.0
+          path: ./.github/actions/go-analyze
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Analyze Go
+        uses: ./.github/actions/go-analyze
+        with:
+          codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
+  pipeline-complete:
+    needs: go-analyze
+    if: always()
+    name: Pipeline Complete
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          STATUS=$(echo '${{ toJSON(needs) }}' | jq '[.[] | select(.result!="success")] | length')
+          exit $STATUS
