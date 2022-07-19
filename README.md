@@ -1,15 +1,15 @@
 # Stim Go Migration lib #
-Library for database sql migrations. Update your databases using incremental SQL-scripts. 
+Library for database sql migrations. Update your databases using incremental SQL-scripts.
 
 ## Install ##
 ``` bash
-go get bitbucket.org/stimtech/go-migration
+go get github.com/stimtech/go-migration
 ```
 
 ## Usage ##
 Add your SQL files to the `db/migrations` directory.
 
-Create the migration service using an (in this example, sqlite) `*sql.DB` 
+Create the migration service using an (in this example, sqlite) `*sql.DB`
 ``` go
 db, err := sql.Open("sqlite3", "db.sqlite")
 logger, err := zap.NewProduction()
@@ -59,15 +59,15 @@ If changes are needed, a new SQL file with those changes should be created.
 All changes in a single file are applied in a transaction. That way no partial migrations are ever present in the database.
 
 ### Lock ###
-The locking mechanism allows several instances of the same application to be deployed at the same time. 
-Only one of them will apply the migrations, to avoid conflicts. 
+The locking mechanism allows several instances of the same application to be deployed at the same time.
+Only one of them will apply the migrations, to avoid conflicts.
 The other instances will wait until the first one completes its migration.
 
-We use a table with a single primary key column to manage the locks. 
+We use a table with a single primary key column to manage the locks.
 This type of locking is supported by most SQL databases.
 
 ### Out-of-order versioning ###
-It is not always known in which order features will be merged to trunk, when the work is started. 
+It is not always known in which order features will be merged to trunk, when the work is started.
 With out-of-order versioning, features can be merged in any order, without having to sync and rename migration files.
 
 ### No down-migrations ###
