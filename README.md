@@ -52,11 +52,8 @@ Note that some databases, MySQL for example, can not roll back DDL altering stat
 These are settings that can be configured.
 
 - `TableName`: the table where all applied migrations are stored. Defaults to `migration`
-
 - `LocKTableName`: the table where the lock is held. Defaults to `migration_lock`
-
 - `Folder`: the folder where all migration SQL files are. Defaults to `db/migrations`
-
 - `LockTimeoutMinutes`: how long a lock can be held before it times out, in minutes. Defaults to 15
 
 ## Design decisions and philosophy ##
@@ -96,7 +93,5 @@ It is recommended to start all file names with the date they are created, possib
 Like so:
 
 - `2022-05-21-#2-initial-db.sql`
-
 - `2022-05-28-#13-create-users-table.sql`
-
 - `2022-06-01-#22-add-email-to-users.sql`
