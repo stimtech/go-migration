@@ -26,35 +26,38 @@ This library is tested with `SQLite`, `MySQL` and `PostgreSQL`, but will probabl
 ## How it works ##
 Running `Migration()` will do the following things:
 
-  - Create the `migration` and `migration_lock` tables if they don't exist already.
+- Create the `migration` and `migration_lock` tables if they don't exist already.
 
-  - Inserts value in `migration_lock`.
+- Inserts value in `migration_lock`.
 
-    - If the insert fails (another process has the lock), it will try again every 5 seconds for a minute. If it still doesn't have the lock it will return an error.
-    - The lock value is automatically removed after 15 minutes, or when the migration finishes.
+  - If the insert fails (another process has the lock), it will try again every 5 seconds for a minute. If it still doesn't have the lock it will return an error.
+  - The lock value is automatically removed after 15 minutes, or when the migration finishes.
 
-  - All previously applied migrations are fetched from the `migration` table.
+- All previously applied migrations are fetched from the `migration` table.
 
-  - Lists all SQL-files in the `db/migrations` folder.
+- Lists all SQL-files in the `db/migrations` folder.
 
-  - For each file, in alphabetical order:
+- For each file, in alphabetical order:
 
-    - If the file has not been applied before, apply it now.
+  - If the file has not been applied before, apply it now.
 
-      - If the file cannot be applied, roll back the entire file (if possible), and return an error.
-      - If apply is successful, add the filename and checksum to `migration`.
+    - If the file cannot be applied, roll back the entire file (if possible), and return an error.
+    - If apply is successful, add the filename and checksum to `migration`.
 
-    - If the file has been applied before, compare the file's checksum with the checksum in `migration`. Return an error if they differ.
+  - If the file has been applied before, compare the file's checksum with the checksum in `migration`. Return an error if they differ.
 
 Note that some databases, MySQL for example, can not roll back DDL altering statements (like `CREATE` or `MODIFY`)
 
 ## Configuration ##
 These are settings that can be configured.
 
-  - `TableName`: the table where all applied migrations are stored. Defaults to `migration`
-  - `LocKTableName`: the table where the lock is held. Defaults to `migration_lock`
-  - `Folder`: the folder where all migration SQL files are. Defaults to `db/migrations`
-  - `LockTimeoutMinutes`: how long a lock can be held before it times out, in minutes. Defaults to 15
+- `TableName`: the table where all applied migrations are stored. Defaults to `migration`
+
+- `LocKTableName`: the table where the lock is held. Defaults to `migration_lock`
+
+- `Folder`: the folder where all migration SQL files are. Defaults to `db/migrations`
+
+- `LockTimeoutMinutes`: how long a lock can be held before it times out, in minutes. Defaults to 15
 
 ## Design decisions and philosophy ##
 
@@ -92,6 +95,6 @@ All files must have names that is later in the lexicographic order than previous
 It is recommended to start all file names with the date they are created, possibly followed by a ticket number, and a short description.
 Like so:
 
-  - `2022-05-21-#2-initial-db.sql`
-  - `2022-05-28-#13-create-users-table.sql`
-  - `2022-06-01-#22-add-email-to-users.sql`
+- `2022-05-21-#2-initial-db.sql`
+- `2022-05-28-#13-create-users-table.sql`
+- `2022-06-01-#22-add-email-to-users.sql`
