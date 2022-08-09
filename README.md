@@ -27,16 +27,26 @@ This library is tested with `SQLite`, `MySQL` and `PostgreSQL`, but will probabl
 Running `Migration()` will do the following things:
 
 - Create the `migration` and `migration_lock` tables if they don't exist already.
+
 - Inserts value in `migration_lock`.
-    - If the insert fails (another process has the lock), it will try again every 5 seconds for a minute. If it still doesn't have the lock it will return an error.
-    - The lock value is automatically removed after 15 minutes, or when the migration finishes.
+
+  - If the insert fails (another process has the lock), it will try again every 5 seconds for a minute. If it still doesn't have the lock it will return an error.
+
+  - The lock value is automatically removed after 15 minutes, or when the migration finishes.
+
 - All previously applied migrations are fetched from the `migration` table.
+
 - Lists all SQL-files in the `db/migrations` folder.
+
 - For each file, in alphabetical order:
-    - If the file has not been applied before, apply it now.
-        - If the file cannot be applied, roll back the entire file (if possible), and return an error.
-        - If apply is successful, add the filename and checksum to `migration`.
-    - If the file has been applied before, compare the file's checksum with the checksum in `migration`. Return an error if they differ.
+    
+  - If the file has not been applied before, apply it now.
+        
+    - If the file cannot be applied, roll back the entire file (if possible), and return an error.
+         
+    - If apply is successful, add the filename and checksum to `migration`.
+      
+  - If the file has been applied before, compare the file's checksum with the checksum in `migration`. Return an error if they differ.
 
 Note that some databases, MySQL for example, can not roll back DDL altering statements (like `CREATE` or `MODIFY`)
 
