@@ -1,3 +1,6 @@
+# This workflow is generated and will be automatically synchronized.
+# Source: https://github.com/stimtech/terraform-github/blob/main/provider/workflows/pipeline-library-go.yml
+
 name: Pipeline
 
 on:
@@ -12,13 +15,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Check out action
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: stimtech/action-go-analyze
-          ref: v1.0.0
+          ref: 2.0.0
           path: ./.github/actions/go-analyze
           token: ${{ secrets.GH_PAT }}
 
