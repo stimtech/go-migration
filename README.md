@@ -71,7 +71,7 @@ It is not always known in which order features will be merged to trunk, when the
 With out-of-order versioning, features can be merged in any order, without having to sync and rename migration files.
 
 ### No down-migrations ###
-Down-migrations (also called roll-backs) are hard to test, and may change or destroy production data in unexpected ways.
+Down-migrations (also called rollbacks) are hard to test, and may change or destroy production data in unexpected ways.
 When there is a problem, create a new up-migration that fixes the problem.
 
 ### Backwards compatibility ###
