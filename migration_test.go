@@ -42,11 +42,10 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop())
+			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/init"})
 
 			dropTables(s, d)
 
-			s.WithFolder("test/init")
 			err = s.Migrate()
 			assert.NoError(t, err)
 
@@ -65,9 +64,8 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop())
+			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/init"})
 
-			s.WithFolder("test/init")
 			err = s.Migrate()
 			assert.NoError(t, err)
 
@@ -85,9 +83,8 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop())
+			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/diff-init"})
 
-			s.WithFolder("test/diff-init")
 			err = s.Migrate()
 			assert.Error(t, err)
 
@@ -105,9 +102,8 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop())
+			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/multi"})
 
-			s.WithFolder("test/multi")
 			err = s.Migrate()
 			assert.NoError(t, err)
 
@@ -125,9 +121,8 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop())
+			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/failing-stmt"})
 
-			s.WithFolder("test/failing-stmt")
 			err = s.Migrate()
 			assert.Error(t, err)
 
@@ -149,9 +144,8 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop())
+			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/no-folder"})
 
-			s.WithFolder("test/no-folder")
 			err = s.Migrate()
 			assert.Error(t, err)
 			if assert.Error(t, err) {
@@ -166,8 +160,7 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop())
-			s.WithFolder("test/no-access")
+			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/no-access"})
 
 			_ = os.Chmod("test/no-access/no-access.sql", os.ModeExclusive)
 			defer func() { _ = os.Chmod("test/no-access/no-access.sql", os.ModePerm) }()
