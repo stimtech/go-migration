@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -123,7 +122,7 @@ func (s *Service) fetchAppliedMigrations() (map[string]string, error) {
 }
 
 func (s *Service) listMigrations() ([]string, error) {
-	files, err := ioutil.ReadDir(s.migrationFolder)
+	files, err := os.ReadDir(s.migrationFolder)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +141,7 @@ func (s *Service) applyMigration(mig string) error {
 		return fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
 	}
 
-	file, err := ioutil.ReadFile(s.migrationFolder + "/" + mig)
+	file, err := os.ReadFile(s.migrationFolder + "/" + mig)
 
 	if err != nil {
 		return fmt.Errorf("failed to read file %s: %w", mig, err)

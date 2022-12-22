@@ -17,37 +17,50 @@ type Service struct {
 }
 
 // New returns a new Database instance.
-func New(db *sql.DB, logger *zap.Logger) *Service {
+func New(db *sql.DB, logger *zap.Logger, config Config) *Service {
+	config = config.replaceEmptiesWithDefaults()
 	return &Service{
 		logger:             logger.Named("go-migration"),
 		db:                 db,
-		migrationTable:     "migration",
-		migrationLockTable: "migration_lock",
-		migrationFolder:    "db/migrations",
-		lockTimeoutMinutes: 15,
+		migrationTable:     config.TableName,
+		migrationLockTable: config.LockTableName,
+		migrationFolder:    config.MigrationFolder,
+		lockTimeoutMinutes: config.LockTimeoutMinutes,
 	}
 }
 
-// WithTableName changes the name of the migration table from 'migration'
-func (s *Service) WithTableName(name string) *Service {
-	s.migrationTable = name
-	return s
+// Config holds migration configuration parameters
+type Config struct {
+	// TableName specifies the name of the table that keeps track of which migrations have been applied.
+	// Defaults to "migration"
+	TableName string
+
+	// LockTableName specifies the name of the table that makes sure only one instance of go-migration runs at the
+	// same time on the same database.
+	// Defaults to "migration_lock"
+	LockTableName string
+
+	// MigrationFolder specifies the location of migration sql files.
+	// Defaults to "db/migrations"
+	MigrationFolder string
+
+	// LockTimeoutMinutes specifies the lock timeout in minutes.
+	// Defaults to 15
+	LockTimeoutMinutes int
 }
 
-// WithLockTableName changes the name of the migration lock table from 'migration_lock'
-func (s *Service) WithLockTableName(name string) *Service {
-	s.migrationLockTable = name
-	return s
-}
-
-// WithFolder changes the location of migration sql files from 'db/migrations'
-func (s *Service) WithFolder(name string) *Service {
-	s.migrationFolder = name
-	return s
-}
-
-// WithLockTimeoutMinutes changes the lock timout from 15 minutes
-func (s *Service) WithLockTimeoutMinutes(minutes int) *Service {
-	s.lockTimeoutMinutes = minutes
-	return s
+func (c Config) replaceEmptiesWithDefaults() Config {
+	if c.TableName == "" {
+		c.TableName = "migration"
+	}
+	if c.LockTableName == "" {
+		c.LockTableName = "migration_lock"
+	}
+	if c.MigrationFolder == "" {
+		c.MigrationFolder = "db/migrations"
+	}
+	if c.LockTimeoutMinutes <= 0 {
+		c.LockTimeoutMinutes = 15
+	}
+	return c
 }
