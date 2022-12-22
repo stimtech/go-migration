@@ -18,7 +18,7 @@ type Service struct {
 
 // New returns a new Database instance.
 func New(db *sql.DB, logger *zap.Logger, config Config) *Service {
-	config = config.replaceBlanksWithDefaults()
+	config = config.replaceEmptiesWithDefaults()
 	return &Service{
 		logger:             logger.Named("go-migration"),
 		db:                 db,
@@ -35,7 +35,7 @@ type Config struct {
 	// Defaults to "migration"
 	TableName string
 
-	// TableName specifies the name of the table that makes sure only one instance of go-migration runs at the
+	// LockTableName specifies the name of the table that makes sure only one instance of go-migration runs at the
 	// same time on the same database.
 	// Defaults to "migration_lock"
 	LockTableName string
@@ -49,7 +49,7 @@ type Config struct {
 	LockTimeoutMinutes int
 }
 
-func (c Config) replaceBlanksWithDefaults() Config {
+func (c Config) replaceEmptiesWithDefaults() Config {
 	if c.TableName == "" {
 		c.TableName = "migration"
 	}
