@@ -164,11 +164,10 @@ func (s *Service) applyMigration(mig string) error {
 		}
 		_, err = tx.Exec(request)
 		if err != nil {
-			s.logger.Error(fmt.Sprintf("failing statement [%s]: %s", request, err.Error()))
 			if err := tx.Rollback(); err != nil {
 				s.logger.Warn("rollback failed")
 			}
-			return err
+			return fmt.Errorf("failing statement [%s]: %w", request, err)
 		}
 	}
 	_, err = tx.Exec(fmt.Sprintf(`insert into %s (id, checksum) values ('%s', '%s')`, s.migrationTable, mig, c))
