@@ -1,4 +1,4 @@
-module github.com/stimtech/go-migration
+module github.com/stimtech/go-migration/v2
 
 go 1.15
 
