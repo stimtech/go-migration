@@ -1,7 +1,6 @@
 package migration
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -25,5 +24,5 @@ func (l defaultLogger) Info(msg string) {
 
 // Warn prints a message prefixed with 'warning: '
 func (l defaultLogger) Warn(msg string) {
-	l.logger.Println(fmt.Sprintf("warning: %s", msg))
+	l.logger.Print("warning: %s \n", msg)
 }
