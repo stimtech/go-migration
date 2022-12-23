@@ -35,7 +35,7 @@ func main() {
 	// list all tables in the database
 	res, err := db.Query("select name from sqlite_master where type='table' order by name")
 	if err != nil {
-
+		logger.Fatal("failed to query database", zap.Error(err))
 	}
 
 	var tables []string
