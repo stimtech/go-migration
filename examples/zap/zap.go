@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Simple example app with minimal configuration
+// Simple example app with a zap logger
 // An sqlite database will be created, and a table added.
 // Run with 'go run basic.go'.
 // Two migrations are present in db/migration and will be loaded into the db in alphabetical order.
