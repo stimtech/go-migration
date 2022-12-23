@@ -2,13 +2,13 @@ package migration
 
 import (
 	"database/sql"
-
-	"go.uber.org/zap"
+	"log"
+	"os"
 )
 
 // Service is the db migration service
 type Service struct {
-	logger             *zap.Logger
+	logger             Logger
 	db                 *sql.DB
 	migrationTable     string
 	migrationLockTable string
@@ -17,16 +17,31 @@ type Service struct {
 }
 
 // New returns a new Database instance.
-func New(db *sql.DB, logger *zap.Logger, config Config) *Service {
-	config = config.replaceEmptiesWithDefaults()
-	return &Service{
-		logger:             logger.Named("go-migration"),
+func New(db *sql.DB, opts ...Option) *Service {
+	s := &Service{
 		db:                 db,
-		migrationTable:     config.TableName,
-		migrationLockTable: config.LockTableName,
-		migrationFolder:    config.MigrationFolder,
-		lockTimeoutMinutes: config.LockTimeoutMinutes,
+		logger:             defaultLogger{logger: log.New(os.Stdout, "go-migration: ", log.LstdFlags)},
+		migrationTable:     "migration",
+		migrationLockTable: "migration_lock",
+		migrationFolder:    "db/migrations",
+		lockTimeoutMinutes: 15,
 	}
+	for _, o := range opts {
+		o.apply(s)
+	}
+
+	return s
+}
+
+// Logger is used to implement different logging solutions.
+type Logger interface {
+	Info(string)
+	Warn(string)
+}
+
+// Option is used to configure go-migration in different ways. Please refer to the examples.
+type Option interface {
+	apply(service *Service)
 }
 
 // Config holds migration configuration parameters
@@ -49,18 +64,17 @@ type Config struct {
 	LockTimeoutMinutes int
 }
 
-func (c Config) replaceEmptiesWithDefaults() Config {
-	if c.TableName == "" {
-		c.TableName = "migration"
+func (c Config) apply(service *Service) {
+	if c.TableName != "" {
+		service.migrationTable = c.TableName
 	}
-	if c.LockTableName == "" {
-		c.LockTableName = "migration_lock"
+	if c.LockTableName != "" {
+		service.migrationLockTable = c.LockTableName
 	}
-	if c.MigrationFolder == "" {
-		c.MigrationFolder = "db/migrations"
+	if c.MigrationFolder != "" {
+		service.migrationFolder = c.MigrationFolder
 	}
-	if c.LockTimeoutMinutes <= 0 {
-		c.LockTimeoutMinutes = 15
+	if c.LockTimeoutMinutes > 0 {
+		service.lockTimeoutMinutes = c.LockTimeoutMinutes
 	}
-	return c
 }

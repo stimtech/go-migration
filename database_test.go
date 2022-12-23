@@ -3,13 +3,11 @@ package migration
 import (
 	"testing"
 
-	"go.uber.org/zap"
-
 	"github.com/stretchr/testify/assert"
 )
 
 func TestService_WithFolder(t *testing.T) {
-	s := New(nil, zap.NewNop(), Config{
+	s := New(nil, Config{
 		MigrationFolder: "test-name",
 	})
 	assert.Equal(t, &Service{
@@ -22,7 +20,7 @@ func TestService_WithFolder(t *testing.T) {
 }
 
 func TestService_WithLockTableName(t *testing.T) {
-	s := New(nil, zap.NewNop(), Config{
+	s := New(nil, Config{
 		LockTableName: "test-name",
 	})
 	assert.Equal(t, &Service{
@@ -35,7 +33,7 @@ func TestService_WithLockTableName(t *testing.T) {
 }
 
 func TestService_WithLockTimeoutMinutes(t *testing.T) {
-	s := New(nil, zap.NewNop(), Config{
+	s := New(nil, Config{
 		LockTimeoutMinutes: 20,
 	})
 	assert.Equal(t, &Service{
@@ -48,7 +46,7 @@ func TestService_WithLockTimeoutMinutes(t *testing.T) {
 }
 
 func TestService_WithTableName(t *testing.T) {
-	s := New(nil, zap.NewNop(), Config{
+	s := New(nil, Config{
 		TableName: "test-name",
 	})
 	assert.Equal(t, &Service{

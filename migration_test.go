@@ -42,7 +42,7 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/init"})
+			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/init"})
 
 			dropTables(s, d)
 
@@ -64,7 +64,7 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/init"})
+			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/init"})
 
 			err = s.Migrate()
 			assert.NoError(t, err)
@@ -83,7 +83,7 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/diff-init"})
+			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/diff-init"})
 
 			err = s.Migrate()
 			assert.Error(t, err)
@@ -102,7 +102,7 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/multi"})
+			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/multi"})
 
 			err = s.Migrate()
 			assert.NoError(t, err)
@@ -121,7 +121,7 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/failing-stmt"})
+			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/failing-stmt"})
 
 			err = s.Migrate()
 			assert.Error(t, err)
@@ -144,7 +144,7 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/no-folder"})
+			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/no-folder"})
 
 			err = s.Migrate()
 			assert.Error(t, err)
@@ -160,7 +160,7 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, zap.NewNop(), Config{MigrationFolder: "test/no-access"})
+			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/no-access"})
 
 			_ = os.Chmod("test/no-access/no-access.sql", os.ModeExclusive)
 			defer func() { _ = os.Chmod("test/no-access/no-access.sql", os.ModePerm) }()
