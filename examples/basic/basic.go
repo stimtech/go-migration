@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/stimtech/go-migration"
+	"github.com/stimtech/go-migration/v2"
 
 	_ "github.com/mattn/go-sqlite3"
 )
