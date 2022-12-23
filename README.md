@@ -1,6 +1,9 @@
 # Stim Go Migration lib #
 Library for database sql migrations. Update your databases using incremental SQL-scripts.
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/d2560259a68c4cd4b231fdae75b35fa0)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=stimtech/go-migration&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/d2560259a68c4cd4b231fdae75b35fa0)](https://www.codacy.com?utm_source=github.com&utm_medium=referral&utm_content=stimtech/go-migration&utm_campaign=Badge_Coverage)
+
 ## Install ##
 ``` bash
 go get github.com/stimtech/go-migration
