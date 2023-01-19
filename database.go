@@ -2,6 +2,7 @@ package migration
 
 import (
 	"database/sql"
+	"io/fs"
 	"log"
 	"os"
 )
@@ -14,6 +15,7 @@ type Service struct {
 	migrationLockTable string
 	migrationFolder    string
 	lockTimeoutMinutes int
+	fs                 fs.FS
 }
 
 // New returns a new Database instance.
@@ -25,6 +27,7 @@ func New(db *sql.DB, opts ...Option) *Service {
 		migrationLockTable: "migration_lock",
 		migrationFolder:    "db/migrations",
 		lockTimeoutMinutes: 15,
+		fs:                 os.DirFS("."),
 	}
 	for _, o := range opts {
 		o.apply(s)
@@ -77,4 +80,14 @@ func (c Config) apply(service *Service) {
 	if c.LockTimeoutMinutes > 0 {
 		service.lockTimeoutMinutes = c.LockTimeoutMinutes
 	}
+}
+
+// FSOption makes migration use a specific FileSystem, instead of the default.
+// useful with embed, for example.
+type FSOption struct {
+	FileSystem fs.FS
+}
+
+func (o FSOption) apply(service *Service) {
+	service.fs = o.FileSystem
 }

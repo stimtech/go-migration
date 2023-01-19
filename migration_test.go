@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	"go.uber.org/zap"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -121,7 +120,7 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/failing-stmt"})
+			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "."}, FSOption{FileSystem: os.DirFS("test/failing-stmt")})
 
 			err = s.Migrate()
 			assert.Error(t, err)

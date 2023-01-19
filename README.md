@@ -50,6 +50,12 @@ These are settings that can be configured.
 - `MigrationFolder`: the folder where all migration SQL files are. Defaults to `db/migrations`
 - `LockTimeoutMinutes`: how long a lock can be held before it times out, in minutes. Defaults to 15
 
+You can also use the `LoggerOption` or `ZapOption` to use a specific logger.
+
+There is also an `FSOption` that can be used in conjunction with `MigrationFolder` to use an embedded file system.
+
+Check out the examples for more details on configuration.
+
 ## Design decisions and philosophy ##
 
 ### Checksums ###

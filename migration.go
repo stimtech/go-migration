@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
+	"io/fs"
 	"sort"
 	"strings"
 	"time"
@@ -53,7 +53,7 @@ func (s *Service) Migrate() error {
 				return fmt.Errorf("failed to apply migration %s: %w", mig, err)
 			}
 		} else {
-			c, err := checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
+			c, err := s.checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 
 			if err != nil {
 				return fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
@@ -122,7 +122,7 @@ func (s *Service) fetchAppliedMigrations() (map[string]string, error) {
 }
 
 func (s *Service) listMigrations() ([]string, error) {
-	files, err := os.ReadDir(s.migrationFolder)
+	files, err := fs.ReadDir(s.fs, s.migrationFolder)
 	if err != nil {
 		return nil, err
 	}
@@ -136,12 +136,12 @@ func (s *Service) listMigrations() ([]string, error) {
 }
 
 func (s *Service) applyMigration(mig string) error {
-	c, err := checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
+	c, err := s.checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 	if err != nil {
 		return fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
 	}
 
-	file, err := os.ReadFile(s.migrationFolder + "/" + mig)
+	file, err := fs.ReadFile(s.fs, fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 
 	if err != nil {
 		return fmt.Errorf("failed to read file %s: %w", mig, err)
@@ -181,8 +181,8 @@ func (s *Service) applyMigration(mig string) error {
 	return tx.Commit()
 }
 
-func checkSum(filename string) (string, error) {
-	input, err := os.Open(filename)
+func (s *Service) checkSum(filename string) (string, error) {
+	input, err := s.fs.Open(filename)
 	if err != nil {
 		return "", err
 	}
