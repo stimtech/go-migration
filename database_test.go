@@ -1,6 +1,7 @@
 package migration
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,6 +17,7 @@ func TestService_WithFolder(t *testing.T) {
 		migrationLockTable: "migration_lock",
 		migrationFolder:    "test-name",
 		lockTimeoutMinutes: 15,
+		fs:                 os.DirFS("."),
 	}, s)
 }
 
@@ -29,6 +31,7 @@ func TestService_WithLockTableName(t *testing.T) {
 		migrationLockTable: "test-name",
 		migrationFolder:    "db/migrations",
 		lockTimeoutMinutes: 15,
+		fs:                 os.DirFS("."),
 	}, s)
 }
 
@@ -42,6 +45,7 @@ func TestService_WithLockTimeoutMinutes(t *testing.T) {
 		migrationLockTable: "migration_lock",
 		migrationFolder:    "db/migrations",
 		lockTimeoutMinutes: 20,
+		fs:                 os.DirFS("."),
 	}, s)
 }
 
@@ -55,5 +59,6 @@ func TestService_WithTableName(t *testing.T) {
 		migrationLockTable: "migration_lock",
 		migrationFolder:    "db/migrations",
 		lockTimeoutMinutes: 15,
+		fs:                 os.DirFS("."),
 	}, s)
 }
