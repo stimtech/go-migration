@@ -1,0 +1,59 @@
+linters:
+  enable:
+    # Default linters, which we make explicit.
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    
+    # Optional linters, which we choose to apply additionally.
+    - bodyclose
+    - bidichk
+    - containedctx
+    - contextcheck
+    - errname
+    - errorlint
+    - gci
+    - gocritic
+    - godot
+    - gofmt
+    - gomnd
+    - gosec
+    - lll
+    - misspell
+    - noctx
+    - reassign
+    - revive
+    - thelper
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - varnamelen
+    - wastedassign
+    - whitespace
+    - wsl
+    - revive
+    # @todo Proceed to check which ones require extra configuration.
+
+linters-settings:
+  revive:
+    rules:
+      - name: exported
+  gci:
+    sections:
+      - standard
+      - prefix(github.com/stimtech/template-go)
+      - prefix(github.com/stimtech)
+      - default
+    custom-order: true
+
+issues:
+  include:
+    - "EXC0012" # revive exported comments
+
+run:
+  go: '1.19'
+  skip-dirs:
+    - tests/mocks
