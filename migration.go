@@ -1,7 +1,7 @@
 package migration
 
 import (
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -187,7 +187,7 @@ func (s *Service) checkSum(filename string) (string, error) {
 		return "", err
 	}
 
-	hash := md5.New()
+	hash := md5.New() // nolint:gosec
 	if _, err := io.Copy(hash, input); err != nil {
 		return "", err
 	}

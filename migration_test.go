@@ -53,7 +53,6 @@ func TestService_Migrate(t *testing.T) {
 				return
 			}
 			assert.Equal(t, []string{"migration", "migration_lock", "test"}, tables)
-
 		})
 
 		t.Run(fmt.Sprintf("[%s] %s", d, "Init again - ok"), func(t *testing.T) {
@@ -168,7 +167,6 @@ func TestService_Migrate(t *testing.T) {
 			if assert.Error(t, err) {
 				assert.True(t, strings.Contains(err.Error(), "permission denied"))
 			}
-
 		})
 	}
 }
