@@ -17,12 +17,12 @@ type zapLogger struct {
 	logger *zap.Logger
 }
 
-// Info logs a message at info level
+// Info logs a message at info level.
 func (l zapLogger) Info(msg string) {
 	l.logger.Info(msg)
 }
 
-// Warn logs a message with at warn level
+// Warn logs a message with at warn level.
 func (l zapLogger) Warn(msg string) {
 	l.logger.Warn(msg)
 }

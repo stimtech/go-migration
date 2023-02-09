@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-// Service is the db migration service
+// Service is the db migration service.
 type Service struct {
 	logger             Logger
 	db                 *sql.DB
@@ -47,23 +47,23 @@ type Option interface {
 	apply(service *Service)
 }
 
-// Config holds migration configuration parameters
+// Config holds migration configuration parameters.
 type Config struct {
 	// TableName specifies the name of the table that keeps track of which migrations have been applied.
-	// Defaults to "migration"
+	// Defaults to "migration".
 	TableName string
 
 	// LockTableName specifies the name of the table that makes sure only one instance of go-migration runs at the
 	// same time on the same database.
-	// Defaults to "migration_lock"
+	// Defaults to "migration_lock".
 	LockTableName string
 
 	// MigrationFolder specifies the location of migration sql files.
-	// Defaults to "db/migrations"
+	// Defaults to "db/migrations".
 	MigrationFolder string
 
 	// LockTimeoutMinutes specifies the lock timeout in minutes.
-	// Defaults to 15
+	// Defaults to 15.
 	LockTimeoutMinutes int
 }
 

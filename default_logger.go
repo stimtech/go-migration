@@ -17,12 +17,12 @@ type defaultLogger struct {
 	logger *log.Logger
 }
 
-// Info prints a message
+// Info prints a message.
 func (l defaultLogger) Info(msg string) {
 	l.logger.Println(msg)
 }
 
-// Warn prints a message prefixed with 'warning: '
+// Warn prints a message prefixed with 'warning: '.
 func (l defaultLogger) Warn(msg string) {
 	l.logger.Printf("warning: %s\n", msg)
 }
