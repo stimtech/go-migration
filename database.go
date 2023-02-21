@@ -71,12 +71,15 @@ func (c Config) apply(service *Service) {
 	if c.TableName != "" {
 		service.migrationTable = c.TableName
 	}
+
 	if c.LockTableName != "" {
 		service.migrationLockTable = c.LockTableName
 	}
+
 	if c.MigrationFolder != "" {
 		service.migrationFolder = c.MigrationFolder
 	}
+
 	if c.LockTimeoutMinutes > 0 {
 		service.lockTimeoutMinutes = c.LockTimeoutMinutes
 	}

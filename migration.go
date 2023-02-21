@@ -28,6 +28,7 @@ func (s *Service) Migrate() error {
 
 	locked, release := s.lock()
 	defer release()
+
 	if !locked {
 		return errors.New("migration already in progress. failed to get lock")
 	}
@@ -76,10 +77,12 @@ func (s *Service) createMigrationTables() error {
 	if err != nil {
 		return err
 	}
+
 	_, err = s.db.Exec(fmt.Sprintf(`create table if not exists %s (
 		id integer primary key,
 		created_at timestamp default current_timestamp);`,
 		s.migrationLockTable))
+
 	return err
 }
 
@@ -96,13 +99,18 @@ func (s *Service) lock() (bool, func()) {
 
 		s.logger.Info("waiting for migration lock")
 		time.Sleep(5 * time.Second)
-		_, _ = s.db.Exec(fmt.Sprintf("delete from %s where created_at < timestampadd(minute, %d, current_timestamp)", s.migrationLockTable, -s.lockTimeoutMinutes))
+
+		_, _ = s.db.Exec(
+			fmt.Sprintf("delete from %s where created_at < timestampadd(minute, %d, current_timestamp)",
+				s.migrationLockTable, -s.lockTimeoutMinutes))
 	}
+
 	return false, func() {}
 }
 
 func (s *Service) fetchAppliedMigrations() (map[string]string, error) {
 	var mig migration
+
 	rows, err := s.db.Query(fmt.Sprintf("select * from %s", s.migrationTable))
 	if err != nil {
 		return nil, err
@@ -114,6 +122,7 @@ func (s *Service) fetchAppliedMigrations() (map[string]string, error) {
 		err = rows.Scan(&mig.ID, &mig.Date, &mig.Checksum)
 		migMap[mig.ID] = mig.Checksum
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -126,12 +135,15 @@ func (s *Service) listMigrations() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var fileNames []string
+
 	for _, file := range files {
 		if !file.IsDir() {
 			fileNames = append(fileNames, file.Name())
 		}
 	}
+
 	return fileNames, nil
 }
 
@@ -162,19 +174,23 @@ func (s *Service) applyMigration(mig string) error {
 		if strings.Trim(request, " \n\r") == "" {
 			continue
 		}
+
 		_, err = tx.Exec(request)
 		if err != nil {
 			if err := tx.Rollback(); err != nil {
 				s.logger.Warn("rollback failed")
 			}
+
 			return fmt.Errorf("failing statement [%s]: %w", request, err)
 		}
 	}
+
 	_, err = tx.Exec(fmt.Sprintf(`insert into %s (id, checksum) values ('%s', '%s')`, s.migrationTable, mig, c))
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			s.logger.Warn("rollback failed")
 		}
+
 		return err
 	}
 
@@ -191,6 +207,8 @@ func (s *Service) checkSum(filename string) (string, error) {
 	if _, err := io.Copy(hash, input); err != nil {
 		return "", err
 	}
+
 	sum := hash.Sum(nil)
+
 	return hex.EncodeToString(sum), nil
 }

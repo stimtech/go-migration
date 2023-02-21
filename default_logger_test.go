@@ -18,14 +18,18 @@ func Test_LoggerOption_apply(t *testing.T) {
 
 func Test_defaultLogger_Info(t *testing.T) {
 	var buffer bytes.Buffer
+
 	l := defaultLogger{logger: log.New(&buffer, "", 0)}
+
 	l.Info("test message")
 	assert.Equal(t, "test message\n", buffer.String())
 }
 
 func Test_defaultLogger_Warn(t *testing.T) {
 	var buffer bytes.Buffer
+
 	l := defaultLogger{logger: log.New(&buffer, "", 0)}
+
 	l.Warn("test message")
 	assert.Equal(t, "warning: test message\n", buffer.String())
 }

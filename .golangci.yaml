@@ -15,12 +15,12 @@ linters:
     - contextcheck
     - errname
     - errorlint
-    # - gci
+    - gci
     - gocritic
     - godot
     - gofmt
     - gosec
-    #- lll
+    - lll
     - misspell
     - noctx
     - reassign
@@ -31,7 +31,7 @@ linters:
     - usestdlibvars
     - wastedassign
     - whitespace
-    # - wsl
+    - wsl
     - revive
 
     # @todo Proceed to check which ones require extra configuration.

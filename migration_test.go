@@ -7,12 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
-
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 type SQLDialect string
@@ -119,7 +118,8 @@ func TestService_Migrate(t *testing.T) {
 			}
 			defer func() { _ = db.Close() }()
 
-			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "."}, FSOption{FileSystem: os.DirFS("test/failing-stmt")})
+			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "."},
+				FSOption{FileSystem: os.DirFS("test/failing-stmt")})
 
 			err = s.Migrate()
 			assert.Error(t, err)
@@ -173,6 +173,7 @@ func TestService_Migrate(t *testing.T) {
 
 func getTableNames(s *Service, d SQLDialect) ([]string, error) {
 	var tables []string
+
 	switch d {
 	case MySQL:
 		res, err := s.db.Query("show tables")
@@ -185,10 +186,12 @@ func getTableNames(s *Service, d SQLDialect) ([]string, error) {
 			if err := res.Scan(&tn); err != nil {
 				return nil, err
 			}
+
 			tables = append(tables, tn)
 		}
 	case PostGreSQL:
-		res, err := s.db.Query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name")
+		res, err := s.db.Query(
+			"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name")
 		if err != nil {
 			return nil, err
 		}
@@ -198,6 +201,7 @@ func getTableNames(s *Service, d SQLDialect) ([]string, error) {
 			if err := res.Scan(&tn); err != nil {
 				return nil, err
 			}
+
 			tables = append(tables, tn)
 		}
 	case Sqlite:
@@ -211,6 +215,7 @@ func getTableNames(s *Service, d SQLDialect) ([]string, error) {
 			if err := res.Scan(&tn); err != nil {
 				return nil, err
 			}
+
 			tables = append(tables, tn)
 		}
 	}
