@@ -3,11 +3,9 @@ package migration
 import (
 	"testing"
 
-	"go.uber.org/zap/zaptest/observer"
-
-	"go.uber.org/zap"
-
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 func Test_ZapOption_apply(t *testing.T) {
