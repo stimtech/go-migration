@@ -9,8 +9,28 @@ on:
   pull_request:
 
 jobs:
+  configuration:
+    name: Gather configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      action_config: ${{ steps.action_config.outputs.data }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Read STIM action configuration
+        id: action_config
+        run: |
+          if [[ -f ".github/stim-pipeline.json" ]]; then
+            echo data=$(cat .github/stim-pipeline.json) >> $GITHUB_OUTPUT
+          else
+            echo data={} >> $GITHUB_OUTPUT
+          fi
+
   go-analyze:
     name: Analyze Go
+    needs: configuration
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -30,13 +50,43 @@ jobs:
         with:
           codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
+  integration-test:
+    name: Integration tests
+    needs: configuration
+    if: fromJSON(needs.configuration.outputs.action_config).actions.action-go-integration-test.enable
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Check out action
+        uses: actions/checkout@v3
+        with:
+          repository: stimtech/action-go-integration-test
+          ref: 1.0.0
+          path: ./.github/actions/go-integration-test
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Run integration tests
+        uses: ./.github/actions/go-integration-test
+        with:
+          gh_credentials: ${{ secrets.GIT_CREDENTIALS }}
+          bitbucket_credentials: ${{ secrets.BITBUCKET_GIT_CREDENTIALS }}
+          codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
   pipeline-complete:
-    needs: go-analyze
-    if: always()
+    needs:
+      - go-analyze
+      - integration-test
+    if: >
+      always() &&
+      needs.go-analyze.result == 'success' &&
+      (needs.integration-test.result == 'success' ||
+      needs.integration-test.result == 'skipped')
     name: Pipeline Complete
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - run: |
-          STATUS=$(echo '${{ toJSON(needs) }}' | jq '[.[] | select(.result!="success")] | length')
+          STATUS=$(echo '${{ toJSON(needs) }}' | jq '[.[] | select(.result!="success" and .result!="skipped")] | length')
           exit $STATUS
