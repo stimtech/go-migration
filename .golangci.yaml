@@ -7,7 +7,7 @@ linters:
     - staticcheck
     - typecheck
     - unused
-
+    
     # Optional linters, which we choose to apply additionally.
     - bodyclose
     - bidichk
@@ -33,7 +33,6 @@ linters:
     - whitespace
     - wsl
     - revive
-
     # @todo Proceed to check which ones require extra configuration.
 
 linters-settings:
@@ -43,7 +42,7 @@ linters-settings:
   gci:
     sections:
       - standard
-      - prefix(github.com/stimtech/go-migration)
+      - prefix(github.com/stimtech/template-go)
       - prefix(github.com/stimtech)
       - default
     custom-order: true
@@ -55,4 +54,4 @@ issues:
 run:
   go: '1.19'
   skip-dirs:
-    - pkg/mock
+    - '^([a-zA-Z0-9\.-]+\/)*mocks?(\/|$)'
