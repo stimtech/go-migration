@@ -88,5 +88,6 @@ jobs:
     timeout-minutes: 5
     steps:
       - run: |
-          STATUS=$(echo '${{ toJSON(needs) }}' | jq '[.[] | select(.result!="success" and .result!="skipped")] | length')
+          STATUS=$(echo '${{ toJSON(needs) }}' | \
+            jq '[.[] | select(.result!="success" and .result!="skipped")] | length')
           exit $STATUS
