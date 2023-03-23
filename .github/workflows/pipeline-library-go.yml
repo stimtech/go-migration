@@ -1,5 +1,5 @@
 # This workflow is generated and will be automatically synchronized.
-# Source: https://github.com/stimtech/terraform-github/blob/main/provider/workflows/pipeline-library-go.yml
+# Source: https://github.com/stimtech/infra-workflows/blob/main/pipeline-library-go.yml
 
 name: Pipeline
 
@@ -41,7 +41,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: stimtech/action-go-analyze
-          ref: 2.1.1
+          ref: 3
           path: ./.github/actions/go-analyze
           token: ${{ secrets.GH_PAT }}
 
@@ -49,6 +49,7 @@ jobs:
         uses: ./.github/actions/go-analyze
         with:
           codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          gh_credentials: ${{ secrets.GIT_CREDENTIALS }}
 
   integration-test:
     name: Integration tests
@@ -63,7 +64,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: stimtech/action-go-integration-test
-          ref: 1.0.0
+          ref: 1
           path: ./.github/actions/go-integration-test
           token: ${{ secrets.GH_PAT }}
 
@@ -75,19 +76,25 @@ jobs:
           codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
   pipeline-complete:
+    name: Pipeline Complete
     needs:
+      - configuration
       - go-analyze
       - integration-test
-    if: >
-      always() &&
-      needs.go-analyze.result == 'success' &&
-      (needs.integration-test.result == 'success' ||
-      needs.integration-test.result == 'skipped')
-    name: Pipeline Complete
+    if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     steps:
-      - run: |
-          STATUS=$(echo '${{ toJSON(needs) }}' | \
-            jq '[.[] | select(.result!="success" and .result!="skipped")] | length')
-          exit $STATUS
+      - name: Check out action
+        uses: actions/checkout@v3
+        with:
+          repository: stimtech/action-pipeline-complete
+          ref: 1
+          path: ./.github/actions/pipeline-complete
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Pipeline Complete
+        uses: ./.github/actions/pipeline-complete
+        with:
+          token: ${{ secrets.GH_PAT }}
+          needs_context: ${{ toJSON(needs) }}
+          notify: false
