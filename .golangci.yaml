@@ -42,7 +42,7 @@ linters-settings:
   gci:
     sections:
       - standard
-      - prefix(github.com/stimtech/template-go)
+      - prefix(github.com/stimtech/go-migration)
       - prefix(github.com/stimtech)
       - default
     custom-order: true
@@ -52,6 +52,6 @@ issues:
     - "EXC0012" # revive exported comments
 
 run:
-  go: '1.19'
+  go: '1.20'
   skip-dirs:
     - '^([a-zA-Z0-9\.-]+\/)*mocks?(\/|$)'
