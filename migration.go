@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -45,14 +46,29 @@ func (s *Service) Migrate() error {
 
 	sort.Strings(availableMigs)
 
+	lastApplied := ""
+
 	for _, mig := range availableMigs {
 		chkSum, ok := appliedMigs[mig]
 
 		if !ok {
-			err = s.applyMigration(mig)
+			funcMigration, exists := s.funcMigrations[lastApplied]
+			if exists {
+				cs, err := s.applyFuncMigration(funcMigration)
+				if err != nil {
+					return fmt.Errorf("failed to apply compiled migration: %w", err)
+				}
+
+				lastApplied = cs
+			}
+
+			cs, err := s.applyMigration(mig)
 			if err != nil {
 				return fmt.Errorf("failed to apply migration %s: %w", mig, err)
 			}
+
+			lastApplied = cs
+
 		} else {
 			c, err := s.checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 
@@ -147,16 +163,16 @@ func (s *Service) listMigrations() ([]string, error) {
 	return fileNames, nil
 }
 
-func (s *Service) applyMigration(mig string) error {
+func (s *Service) applyMigration(mig string) (string, error) {
 	c, err := s.checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 	if err != nil {
-		return fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
+		return "", fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
 	}
 
 	file, err := fs.ReadFile(s.fs, fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 
 	if err != nil {
-		return fmt.Errorf("failed to read file %s: %w", mig, err)
+		return "", fmt.Errorf("failed to read file %s: %w", mig, err)
 	}
 
 	requests := strings.Split(string(file), ";")
@@ -167,7 +183,7 @@ func (s *Service) applyMigration(mig string) error {
 	// https://stackoverflow.com/questions/22806261/can-i-use-transactions-with-alter-table
 	tx, err := s.db.Begin()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	for _, request := range requests {
@@ -181,7 +197,7 @@ func (s *Service) applyMigration(mig string) error {
 				s.logger.Warn("rollback failed")
 			}
 
-			return fmt.Errorf("failing statement [%s]: %w", request, err)
+			return "", fmt.Errorf("failing statement [%s]: %w", request, err)
 		}
 	}
 
@@ -191,10 +207,41 @@ func (s *Service) applyMigration(mig string) error {
 			s.logger.Warn("rollback failed")
 		}
 
-		return err
+		return "", err
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return "", fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return c, nil
+}
+
+func (s *Service) applyFuncMigration(fm FuncMigration) (string, error) {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return "", fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	if err := fm.Apply(tx); err != nil {
+
+		if err := tx.Rollback(); err != nil {
+			return "", fmt.Errorf("failed to rollback failed migration %w", err)
+		}
+
+		return "", fmt.Errorf("failed to apply migration: %w", err)
+	}
+
+	checksum, err := s.checkSum(filepath.Join(s.migrationTable, fm.FileName()))
+	if err != nil {
+		return "", fmt.Errorf("failed to create checksum for migration: %w", err)
+	}
+
+	if _, err = tx.Exec(fmt.Sprintf(`insert into %s (id, checksum) values ('%s', '%s')`, s.migrationTable, fm.FileName(), checksum)); err != nil {
+		return "", fmt.Errorf("failed to insert applied migration into migrations table: %w", err)
+	}
+
+	return checksum, nil
 }
 
 func (s *Service) checkSum(filename string) (string, error) {

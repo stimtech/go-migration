@@ -16,6 +16,7 @@ type Service struct {
 	migrationFolder    string
 	lockTimeoutMinutes int
 	fs                 fs.FS
+	funcMigrations     map[string]FuncMigration
 }
 
 // New returns a new Database instance.
@@ -93,4 +94,25 @@ type FSOption struct {
 
 func (o FSOption) apply(service *Service) {
 	service.fs = o.FileSystem
+}
+
+type FuncMigrationOption struct {
+	// ApplyAfterChecksum denotes the checksum of the migration after which the
+	// FuncMigration provided is to be applied. If no migration checksum matches
+	// the value supplied, the migration process will be interrupted and a
+	// rollback will take place.
+	ApplyAfterChecksum string
+
+	// Migration is the FuncMigration that will be applied by a call to its
+	// Apply func after a Migration with a checksum matching ApplyAfterChecksum
+	// has been successfully applied.
+	Migration FuncMigration
+}
+
+func (o FuncMigrationOption) apply(service *Service) {
+	if o.ApplyAfterChecksum == "" {
+		panic("checksum of func migration may not be empty")
+	}
+
+	service.funcMigrations[o.ApplyAfterChecksum] = o.Migration
 }
