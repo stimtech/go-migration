@@ -29,6 +29,7 @@ func New(db *sql.DB, opts ...Option) *Service {
 		migrationFolder:    "db/migrations",
 		lockTimeoutMinutes: 15,
 		fs:                 os.DirFS("."),
+		funcMigrations:     map[string]FuncMigration{},
 	}
 	for _, o := range opts {
 		o.apply(s)
