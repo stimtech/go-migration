@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -234,7 +233,7 @@ func (s *Service) applyFuncMigration(fm FuncMigration) (string, error) {
 		return "", fmt.Errorf("failed to apply migration: %w", err)
 	}
 
-	checksum, err := s.checkSum(filepath.Join(s.migrationFolder, fm.FileName()))
+	checksum, err := s.checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, fm.FileName()))
 	if err != nil {
 		return "", fmt.Errorf("failed to create checksum for migration: %w", err)
 	}
