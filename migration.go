@@ -53,13 +53,15 @@ func (s *Service) Migrate() error {
 
 		if !ok {
 			funcMigration, exists := s.funcMigrations[lastApplied]
-			if exists {
+			if exists && strings.HasSuffix(mig, ".go") {
 				cs, err := s.applyFuncMigration(funcMigration)
 				if err != nil {
 					return fmt.Errorf("failed to apply compiled migration: %w", err)
 				}
 
 				lastApplied = cs
+
+				continue
 			}
 
 			cs, err := s.applyMigration(mig)
