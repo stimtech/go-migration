@@ -242,6 +242,10 @@ func (s *Service) applyFuncMigration(fm FuncMigration) (string, error) {
 		return "", fmt.Errorf("failed to insert applied migration into migrations table: %w", err)
 	}
 
+	if err := tx.Commit(); err != nil {
+		return "", fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
 	return checksum, nil
 }
 
