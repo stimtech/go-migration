@@ -207,7 +207,7 @@ func (s *Service) applyMigration(mig string) error {
 		}
 	}
 
-	if err = s.insertCompletedMigration(tx, mig, c); err != nil {
+	if err = s.insertCompletedMigration(tx, c, mig); err != nil {
 		return fmt.Errorf("failed to insert migration: %w", err)
 	}
 
