@@ -6,8 +6,11 @@ import "database/sql"
 // code based migrations. If a call to Apply returns with a non-nil error, the
 // migration process will be interrupted and a rollback will occur.
 type FuncMigration interface {
-	// Apply implementations should perform any arbitrary implementation function
+	// Apply should perform the migration. Implementations should not commit
+	// nor rollback the transaction.
 	Apply(db *sql.Tx) error
 
-	FileName() string
+	// Filename should declare the file in the migrations dir in which the
+	// migration is implemented.
+	Filename() string
 }

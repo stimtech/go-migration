@@ -1,7 +1,9 @@
 package migration
 
 import (
+	"bytes"
 	"crypto/md5" //nolint:gosec
+	"database/sql"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -45,34 +47,37 @@ func (s *Service) Migrate() error {
 
 	sort.Strings(availableMigs)
 
-	lastApplied := ""
-
 	for _, mig := range availableMigs {
 		chkSum, ok := appliedMigs[mig]
 
 		if !ok {
-			funcMigration, exists := s.funcMigrations[lastApplied]
-			if exists && strings.HasSuffix(mig, ".go") {
-				cs, err := s.applyFuncMigration(funcMigration)
-				if err != nil {
-					return fmt.Errorf("failed to apply compiled migration: %w", err)
+			if strings.HasSuffix(mig, ".go") {
+				fm, exists := s.funcMigrations[mig]
+				if !exists {
+					return fmt.Errorf("failed to find supplied func migration implementation with filename %s", mig)
 				}
 
-				lastApplied = cs
+				if fm.Filename() != mig {
+					return fmt.Errorf("declared filename of "+
+						"funcmigration does not match filename of "+
+						"migration operated on, expected %s got %s",
+						mig,
+						fm.Filename(),
+					)
+				}
+
+				if err := s.applyFuncMigration(fm); err != nil {
+					return fmt.Errorf("failed to apply compiled migration: %w", err)
+				}
 
 				continue
 			}
 
-			cs, err := s.applyMigration(mig)
-			if err != nil {
+			if err := s.applyMigration(mig); err != nil {
 				return fmt.Errorf("failed to apply migration %s: %w", mig, err)
 			}
-
-			lastApplied = cs
-
 		} else {
-			c, err := s.checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
-
+			c, err := s.fileHash(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 			if err != nil {
 				return fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
 			}
@@ -164,16 +169,16 @@ func (s *Service) listMigrations() ([]string, error) {
 	return fileNames, nil
 }
 
-func (s *Service) applyMigration(mig string) (string, error) {
-	c, err := s.checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
+func (s *Service) applyMigration(mig string) error {
+	c, err := s.fileHash(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 	if err != nil {
-		return "", fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
+		return fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
 	}
 
 	file, err := fs.ReadFile(s.fs, fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 
 	if err != nil {
-		return "", fmt.Errorf("failed to read file %s: %w", mig, err)
+		return fmt.Errorf("failed to read file %s: %w", mig, err)
 	}
 
 	requests := strings.Split(string(file), ";")
@@ -184,7 +189,7 @@ func (s *Service) applyMigration(mig string) (string, error) {
 	// https://stackoverflow.com/questions/22806261/can-i-use-transactions-with-alter-table
 	tx, err := s.db.Begin()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	for _, request := range requests {
@@ -198,63 +203,81 @@ func (s *Service) applyMigration(mig string) (string, error) {
 				s.logger.Warn("rollback failed")
 			}
 
-			return "", fmt.Errorf("failing statement [%s]: %w", request, err)
+			return fmt.Errorf("failing statement [%s]: %w", request, err)
 		}
 	}
 
-	_, err = tx.Exec(fmt.Sprintf(`insert into %s (id, checksum) values ('%s', '%s')`, s.migrationTable, mig, c))
+	if err = s.insertCompletedMigration(tx, mig, c); err != nil {
+		return fmt.Errorf("failed to insert migration: %w", err)
+	}
+
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			s.logger.Warn("rollback failed")
 		}
 
-		return "", err
+		return err
 	}
 
-	if err := tx.Commit(); err != nil {
-		return "", fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	return c, nil
+	return tx.Commit()
 }
 
-func (s *Service) applyFuncMigration(fm FuncMigration) (string, error) {
+func (s *Service) applyFuncMigration(fm FuncMigration) error {
+	s.logger.Info(fmt.Sprintf("applying migration: %s", fm.Filename()))
+
 	tx, err := s.db.Begin()
 	if err != nil {
-		return "", fmt.Errorf("failed to begin transaction: %w", err)
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
 	if err := fm.Apply(tx); err != nil {
-
 		if err := tx.Rollback(); err != nil {
-			return "", fmt.Errorf("failed to rollback failed migration %w", err)
+			return fmt.Errorf("failed to rollback failed migration %w", err)
 		}
 
-		return "", fmt.Errorf("failed to apply migration: %w", err)
+		return fmt.Errorf("failed to apply migration: %w", err)
 	}
 
-	checksum, err := s.checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, fm.FileName()))
+	// Checksum of func migrations are only based on the filename of the
+	// migration. This is to prevent issues where import names may change due
+	// to lib updates, which would otherwise break the hashing contract.
+	checksum, err := s.checksum(bytes.NewReader([]byte(fm.Filename())))
 	if err != nil {
-		return "", fmt.Errorf("failed to create checksum for migration: %w", err)
+		return fmt.Errorf("failed to create checksum for migration: %w", err)
 	}
 
-	if _, err = tx.Exec(fmt.Sprintf(`insert into %s (id, checksum) values ('%s', '%s')`, s.migrationTable, fm.FileName(), checksum)); err != nil {
-		return "", fmt.Errorf("failed to insert applied migration into migrations table: %w", err)
+	if err := s.insertCompletedMigration(tx, checksum, fm.Filename()); err != nil {
+		return fmt.Errorf("failed to insert migration: %w", err)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return "", fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	return checksum, nil
+	return tx.Commit()
 }
 
-func (s *Service) checkSum(filename string) (string, error) {
+func (s *Service) insertCompletedMigration(tx *sql.Tx, checksum, filename string) error {
+	if _, err := tx.Exec(
+		fmt.Sprintf(
+			`insert into %s (id, checksum) values ('%s', '%s')`,
+			s.migrationTable,
+			filename,
+			checksum,
+		),
+	); err != nil {
+		return fmt.Errorf("failed to insert applied migration into migrations table: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) fileHash(filename string) (string, error) {
 	input, err := s.fs.Open(filename)
 	if err != nil {
 		return "", err
 	}
 
+	return s.checksum(input)
+}
+
+func (s *Service) checksum(input io.Reader) (string, error) {
 	hash := md5.New() // nolint:gosec
 	if _, err := io.Copy(hash, input); err != nil {
 		return "", err

@@ -97,23 +97,17 @@ func (o FSOption) apply(service *Service) {
 	service.fs = o.FileSystem
 }
 
+// FuncMigrationOption should be used if project requires code based migrations,
+// implementations should be located in the migrations directory of the project
+// alongside .sql migration files and the same naming convention is to be used.
 type FuncMigrationOption struct {
-	// ApplyAfterChecksum denotes the checksum of the migration after which the
-	// FuncMigration provided is to be applied. If no migration checksum matches
-	// the value supplied, the migration process will be interrupted and a
-	// rollback will take place.
-	ApplyAfterChecksum string
-
 	// Migration is the FuncMigration that will be applied by a call to its
-	// Apply func after a Migration with a checksum matching ApplyAfterChecksum
-	// has been successfully applied.
+	// Apply func. The migration will be applied using the same ordering as in
+	// the .sql file case, using the ordered strings index of the filename
+	// supplied.
 	Migration FuncMigration
 }
 
 func (o FuncMigrationOption) apply(service *Service) {
-	if o.ApplyAfterChecksum == "" {
-		panic("checksum of func migration may not be empty")
-	}
-
-	service.funcMigrations[o.ApplyAfterChecksum] = o.Migration
+	service.funcMigrations[o.Migration.Filename()] = o.Migration
 }
