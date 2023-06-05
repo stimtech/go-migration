@@ -1,3 +1,5 @@
+*.sqlite
+
 mig.db
 
 # JetBrains IDE
