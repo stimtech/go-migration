@@ -59,7 +59,7 @@ func (s *Service) Migrate() error {
 			if funcMigration != nil {
 				// Code based migration not yet applied was found.
 				if err := s.applyFuncMigration(funcMigration); err != nil {
-					return fmt.Errorf("failed to apply func migration: %w", err)
+					return fmt.Errorf("failed to apply func migration %s: %w", mig, err)
 				}
 
 				continue
