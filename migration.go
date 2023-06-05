@@ -48,32 +48,25 @@ func (s *Service) Migrate() error {
 	sort.Strings(availableMigs)
 
 	for _, mig := range availableMigs {
-		chkSum, ok := appliedMigs[mig]
+		chkSum, applied := appliedMigs[mig]
 
-		if !ok {
-			if strings.HasSuffix(mig, ".go") {
-				fm, exists := s.funcMigrations[mig]
-				if !exists {
-					return fmt.Errorf("failed to find supplied func migration implementation with filename %s", mig)
-				}
+		if !applied {
+			funcMigration, err := s.shouldApplyFuncMigration(mig)
+			if err != nil {
+				return fmt.Errorf("failed to determine if func migration should be applied: %w", err)
+			}
 
-				if fm.Filename() != mig {
-					return fmt.Errorf("declared filename of "+
-						"funcmigration does not match filename of "+
-						"migration operated on, expected %s got %s",
-						mig,
-						fm.Filename(),
-					)
-				}
-
-				if err := s.applyFuncMigration(fm); err != nil {
-					return fmt.Errorf("failed to apply compiled migration: %w", err)
+			if funcMigration != nil {
+				// Code based migration not yet applied was found.
+				if err := s.applyFuncMigration(funcMigration); err != nil {
+					return fmt.Errorf("failed to apply func migration: %w", err)
 				}
 
 				continue
 			}
 
-			if err := s.applyMigration(mig); err != nil {
+			// SQL based migration not yet applied was found.
+			if err := s.applySQLMigration(mig); err != nil {
 				return fmt.Errorf("failed to apply migration %s: %w", mig, err)
 			}
 		} else {
@@ -88,6 +81,28 @@ func (s *Service) Migrate() error {
 	}
 
 	return nil
+}
+
+func (s *Service) shouldApplyFuncMigration(name string) (FuncMigration, error) {
+	if !strings.HasSuffix(name, ".go") {
+		return nil, nil
+	}
+
+	fm, exists := s.funcMigrations[name]
+	if !exists {
+		return nil, fmt.Errorf("failed to find supplied func migration implementation with filename %s", name)
+	}
+
+	if fm.Filename() != name {
+		return nil, fmt.Errorf("declared filename of "+
+			"funcmigration does not match filename of "+
+			"migration operated on, expected %s got %s",
+			name,
+			fm.Filename(),
+		)
+	}
+
+	return fm, nil
 }
 
 func (s *Service) createMigrationTables() error {
@@ -169,7 +184,7 @@ func (s *Service) listMigrations() ([]string, error) {
 	return fileNames, nil
 }
 
-func (s *Service) applyMigration(mig string) error {
+func (s *Service) applySQLMigration(mig string) error {
 	c, err := s.fileHash(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 	if err != nil {
 		return fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
