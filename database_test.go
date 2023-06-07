@@ -18,6 +18,7 @@ func TestService_WithFolder(t *testing.T) {
 		migrationFolder:    "test-name",
 		lockTimeoutMinutes: 15,
 		fs:                 os.DirFS("."),
+		funcMigrations:     map[string]FuncMigration{},
 	}, s)
 }
 
@@ -32,6 +33,7 @@ func TestService_WithLockTableName(t *testing.T) {
 		migrationFolder:    "db/migrations",
 		lockTimeoutMinutes: 15,
 		fs:                 os.DirFS("."),
+		funcMigrations:     map[string]FuncMigration{},
 	}, s)
 }
 
@@ -46,6 +48,7 @@ func TestService_WithLockTimeoutMinutes(t *testing.T) {
 		migrationFolder:    "db/migrations",
 		lockTimeoutMinutes: 20,
 		fs:                 os.DirFS("."),
+		funcMigrations:     map[string]FuncMigration{},
 	}, s)
 }
 
@@ -60,5 +63,6 @@ func TestService_WithTableName(t *testing.T) {
 		migrationFolder:    "db/migrations",
 		lockTimeoutMinutes: 15,
 		fs:                 os.DirFS("."),
+		funcMigrations:     map[string]FuncMigration{},
 	}, s)
 }
