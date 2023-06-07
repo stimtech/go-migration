@@ -1,3 +1,5 @@
+// nolint:revive
+// No docs for test migration implementations.
 package code_based
 
 import (
