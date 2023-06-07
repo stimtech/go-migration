@@ -3,11 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/stimtech/go-migration/v2/examples/code-based/db/migrations"
 	"log"
 	"strings"
 
 	"github.com/stimtech/go-migration/v2"
+	"github.com/stimtech/go-migration/v2/examples/code-based/db/migrations"
 
 	_ "github.com/mattn/go-sqlite3"
 )

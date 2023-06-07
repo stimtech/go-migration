@@ -83,6 +83,10 @@ func (s *Service) Migrate() error {
 	return nil
 }
 
+// shouldApplyFuncMigration checks if a migration filename matches that of a
+// declared func migration. Func migration files need to use .go as their file
+// extension. Returns the provided implementation if one exists and nil if no
+// such migration exists.
 func (s *Service) shouldApplyFuncMigration(name string) (FuncMigration, error) {
 	if !strings.HasSuffix(name, ".go") {
 		return nil, nil
