@@ -1,7 +1,9 @@
 package migration
 
 import (
+	"bytes"
 	"crypto/md5" //nolint:gosec
+	"database/sql"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -46,16 +48,38 @@ func (s *Service) Migrate() error {
 	sort.Strings(availableMigs)
 
 	for _, mig := range availableMigs {
-		chkSum, ok := appliedMigs[mig]
+		chkSum, applied := appliedMigs[mig]
 
-		if !ok {
-			err = s.applyMigration(mig)
+		if !applied {
+			funcMigration, err := s.shouldApplyFuncMigration(mig)
 			if err != nil {
+				return fmt.Errorf("failed to determine if func migration should be applied: %w", err)
+			}
+
+			if funcMigration != nil {
+				// Code based migration not yet applied was found.
+				if err := s.applyFuncMigration(funcMigration); err != nil {
+					return fmt.Errorf("failed to apply func migration %s: %w", mig, err)
+				}
+
+				continue
+			}
+
+			// Explicitly require SQL-type migrations to have .sql suffix to
+			// allow for go files in migrations directory that e.g. may be added
+			// during pipeline execution or as test files for func migrations.
+			if !strings.HasSuffix(mig, ".sql") {
+				s.logger.Info(fmt.Sprintf("Skipping file %s.", mig))
+
+				continue
+			}
+
+			// SQL based migration not yet applied was found.
+			if err := s.applySQLMigration(mig); err != nil {
 				return fmt.Errorf("failed to apply migration %s: %w", mig, err)
 			}
 		} else {
-			c, err := s.checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
-
+			c, err := s.fileHash(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 			if err != nil {
 				return fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
 			}
@@ -66,6 +90,36 @@ func (s *Service) Migrate() error {
 	}
 
 	return nil
+}
+
+// shouldApplyFuncMigration checks if a migration filename matches that of a
+// declared func migration. Func migration files need to use .go as their file
+// extension. Returns the provided implementation if one exists and nil if no
+// such migration exists.
+func (s *Service) shouldApplyFuncMigration(name string) (FuncMigration, error) {
+	if !strings.HasSuffix(name, ".go") {
+		return nil, nil
+	}
+
+	fm, exists := s.funcMigrations[name]
+	if !exists {
+		s.logger.Info(fmt.Sprintf("Ignoring possible migration file, "+
+			"no filename declaration matching %s was found in provided func "+
+			"migrations.", name))
+
+		return nil, nil
+	}
+
+	if fm.Filename() != name {
+		return nil, fmt.Errorf("declared filename of "+
+			"funcmigration does not match filename of "+
+			"migration operated on, expected %s got %s",
+			name,
+			fm.Filename(),
+		)
+	}
+
+	return fm, nil
 }
 
 func (s *Service) createMigrationTables() error {
@@ -147,8 +201,8 @@ func (s *Service) listMigrations() ([]string, error) {
 	return fileNames, nil
 }
 
-func (s *Service) applyMigration(mig string) error {
-	c, err := s.checkSum(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
+func (s *Service) applySQLMigration(mig string) error {
+	c, err := s.fileHash(fmt.Sprintf("%s/%s", s.migrationFolder, mig))
 	if err != nil {
 		return fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
 	}
@@ -185,7 +239,10 @@ func (s *Service) applyMigration(mig string) error {
 		}
 	}
 
-	_, err = tx.Exec(fmt.Sprintf(`insert into %s (id, checksum) values ('%s', '%s')`, s.migrationTable, mig, c))
+	if err = s.insertCompletedMigration(tx, c, mig); err != nil {
+		return fmt.Errorf("failed to insert migration: %w", err)
+	}
+
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			s.logger.Warn("rollback failed")
@@ -197,12 +254,62 @@ func (s *Service) applyMigration(mig string) error {
 	return tx.Commit()
 }
 
-func (s *Service) checkSum(filename string) (string, error) {
+func (s *Service) applyFuncMigration(fm FuncMigration) error {
+	s.logger.Info(fmt.Sprintf("applying migration: %s", fm.Filename()))
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	if err := fm.Apply(tx); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("failed to rollback failed migration %w", err)
+		}
+
+		return fmt.Errorf("failed to apply migration: %w", err)
+	}
+
+	// Checksum of func migrations are only based on the filename of the
+	// migration. This is to prevent issues where import names may change due
+	// to lib updates, which would otherwise break the hashing contract.
+	checksum, err := s.checksum(bytes.NewReader([]byte(fm.Filename())))
+	if err != nil {
+		return fmt.Errorf("failed to create checksum for migration: %w", err)
+	}
+
+	if err := s.insertCompletedMigration(tx, checksum, fm.Filename()); err != nil {
+		return fmt.Errorf("failed to insert migration: %w", err)
+	}
+
+	return tx.Commit()
+}
+
+func (s *Service) insertCompletedMigration(tx *sql.Tx, checksum, filename string) error {
+	if _, err := tx.Exec(
+		fmt.Sprintf(
+			`insert into %s (id, checksum) values ('%s', '%s')`,
+			s.migrationTable,
+			filename,
+			checksum,
+		),
+	); err != nil {
+		return fmt.Errorf("failed to insert applied migration into migrations table: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) fileHash(filename string) (string, error) {
 	input, err := s.fs.Open(filename)
 	if err != nil {
 		return "", err
 	}
 
+	return s.checksum(input)
+}
+
+func (s *Service) checksum(input io.Reader) (string, error) {
 	hash := md5.New() // nolint:gosec
 	if _, err := io.Copy(hash, input); err != nil {
 		return "", err

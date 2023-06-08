@@ -7,6 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	code_based "github.com/stimtech/go-migration/v2/test/code-based"
+	code_based_fail "github.com/stimtech/go-migration/v2/test/code-based-fail"
+
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	_ "github.com/mattn/go-sqlite3"
@@ -167,6 +170,99 @@ func TestService_Migrate(t *testing.T) {
 			if assert.Error(t, err) {
 				assert.True(t, strings.Contains(err.Error(), "permission denied"))
 			}
+		})
+
+		t.Run(fmt.Sprintf("[%s] %s", d, "Code based migrations"), func(t *testing.T) {
+			db, err := sql.Open(string(d), c)
+			if !assert.NoError(t, err) {
+				return
+			}
+			defer func() { _ = db.Close() }()
+
+			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/code-based"}, FuncMigrationOption{
+				Migration: &code_based.CBTest2{
+					Name: "cb_test2.go",
+				},
+			})
+
+			err = s.Migrate()
+			assert.NoError(t, err)
+
+			// Check that schema matches expected layout.
+			tables, err := getTableNames(s, d)
+			if !assert.NoError(t, err, "could not query for tables") {
+				return
+			}
+
+			if d == MySQL { // MySQL can't roll back DDL statements
+				assert.Equal(t, []string{
+					"cb_1_initial",
+					"cb_2_from_code",
+					"migration",
+					"migration_lock",
+					"multi",
+					"multi2",
+					"should_rollback",
+					"test",
+				}, tables)
+			} else {
+				assert.Equal(t, []string{
+					"cb_1_initial",
+					"cb_2_from_code",
+					"migration",
+					"migration_lock",
+					"multi",
+					"multi2",
+					"test",
+				}, tables)
+			}
+
+			// Check that values in tables inserted as expected.
+			{ // Table created through SQL.
+				t1Val := &sql.NullString{}
+				err = db.QueryRow("select id from cb_1_initial limit 1;").Scan(t1Val)
+				assert.NoError(t, err)
+				assert.NotNil(t, t1Val)
+				assert.Equal(t, "grodanboll", t1Val.String)
+			}
+			{ // Table created through code and updated using SQL.
+				t2Val := &sql.NullString{}
+				err = db.QueryRow("select name from cb_2_from_code limit 1;").Scan(t2Val)
+				assert.NoError(t, err)
+				assert.NotNil(t, t2Val)
+				assert.Equal(t, "kallekula", t2Val.String)
+			}
+		})
+
+		t.Run(fmt.Sprintf("[%s] %s", d, "Code based migrations - Failing statement rolled back"), func(t *testing.T) {
+			db, err := sql.Open(string(d), c)
+			if !assert.NoError(t, err) {
+				return
+			}
+			defer func() { _ = db.Close() }()
+
+			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/code-based-fail"}, FuncMigrationOption{
+				Migration: &code_based_fail.CBFailTest2{
+					Name: "cb_fail_test2.go",
+				},
+			})
+
+			err = s.Migrate()
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "failed to apply func migration cb_fail_test2.go")
+
+			// Check that only values from SQL based migration remains. Values
+			// from func migration should have been rolled back.
+			count := 0
+			err = db.QueryRow("select count(*) from cb_2_initial;").Scan(&count)
+			assert.NoError(t, err)
+			assert.Equal(t, 1, count)
+
+			val := &sql.NullString{}
+			err = db.QueryRow("select id from cb_2_initial limit 1;").Scan(val)
+			assert.NoError(t, err)
+			assert.NotNil(t, val)
+			assert.Equal(t, "should_remain", val.String)
 		})
 	}
 }

@@ -16,6 +16,7 @@ type Service struct {
 	migrationFolder    string
 	lockTimeoutMinutes int
 	fs                 fs.FS
+	funcMigrations     map[string]FuncMigration
 }
 
 // New returns a new Database instance.
@@ -28,6 +29,7 @@ func New(db *sql.DB, opts ...Option) *Service {
 		migrationFolder:    "db/migrations",
 		lockTimeoutMinutes: 15,
 		fs:                 os.DirFS("."),
+		funcMigrations:     map[string]FuncMigration{},
 	}
 	for _, o := range opts {
 		o.apply(s)
@@ -93,4 +95,19 @@ type FSOption struct {
 
 func (o FSOption) apply(service *Service) {
 	service.fs = o.FileSystem
+}
+
+// FuncMigrationOption should be used if project requires code based migrations,
+// implementations should be located in the migrations directory of the project
+// alongside .sql migration files and the same naming convention is to be used.
+type FuncMigrationOption struct {
+	// Migration is the FuncMigration that will be applied by a call to its
+	// Apply func. The migration will be applied using the same ordering as in
+	// the .sql file case, using the ordered strings index of the filename
+	// supplied.
+	Migration FuncMigration
+}
+
+func (o FuncMigrationOption) apply(service *Service) {
+	service.funcMigrations[o.Migration.Filename()] = o.Migration
 }
