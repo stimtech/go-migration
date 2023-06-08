@@ -94,7 +94,11 @@ func (s *Service) shouldApplyFuncMigration(name string) (FuncMigration, error) {
 
 	fm, exists := s.funcMigrations[name]
 	if !exists {
-		return nil, fmt.Errorf("failed to find supplied func migration implementation with filename %s", name)
+		s.logger.Info(fmt.Sprintf("Ignoring possible migration file, "+
+			"no filename declaration matching %s was found in provided func "+
+			"migrations.", name))
+
+		return nil, nil
 	}
 
 	if fm.Filename() != name {
