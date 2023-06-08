@@ -65,6 +65,15 @@ func (s *Service) Migrate() error {
 				continue
 			}
 
+			// Explicitly require SQL-type migrations to have .sql suffix to
+			// allow for go files in migrations directory that e.g. may be added
+			// during pipeline execution or as test files for func migrations.
+			if !strings.HasSuffix(mig, ".sql") {
+				s.logger.Info(fmt.Sprintf("Skipping file %s.", mig))
+
+				continue
+			}
+
 			// SQL based migration not yet applied was found.
 			if err := s.applySQLMigration(mig); err != nil {
 				return fmt.Errorf("failed to apply migration %s: %w", mig, err)
