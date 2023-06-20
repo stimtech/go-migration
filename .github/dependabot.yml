@@ -7,4 +7,6 @@ updates:
     open-pull-requests-limit: 0
     reviewers:
       - "stimtech/team-brown"
+    pull-request-branch-name:
+      separator: "-"
 
