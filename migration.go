@@ -83,6 +83,14 @@ func (s *Service) Migrate() error {
 			if err != nil {
 				return fmt.Errorf("failed to get checksum for file %s: %w", mig, err)
 			}
+
+			if strings.HasSuffix(mig, ".go") {
+				c, err = s.checksum(bytes.NewReader([]byte(mig)))
+				if err != nil {
+					return fmt.Errorf("failed to create checksum for migration: %w", err)
+				}
+			}
+
 			if c != chkSum {
 				return fmt.Errorf("file %s has been updated since it was migrated", mig)
 			}
