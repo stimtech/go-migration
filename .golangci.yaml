@@ -39,6 +39,7 @@ linters-settings:
   revive:
     rules:
       - name: exported
+      - name: var-naming
   gci:
     sections:
       - standard
@@ -52,6 +53,6 @@ issues:
     - "EXC0012" # revive exported comments
 
 run:
-  go: '1.20'
+  go: '1.21'
   skip-dirs:
     - '^([a-zA-Z0-9\.-]+\/)*mocks?(\/|$)'
