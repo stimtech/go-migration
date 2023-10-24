@@ -4,7 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 3
+    allow:
+      - dependency-name: github.com/stimtech/*
     reviewers:
       - "stimtech/team-brown"
     pull-request-branch-name:
