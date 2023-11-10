@@ -92,7 +92,8 @@ func (s *Service) Migrate() error {
 			}
 
 			if c != chkSum {
-				return fmt.Errorf("file %s has been updated since it was migrated", mig)
+				return fmt.Errorf("file %s has been updated since it was migrated, "+
+					"wanted checksum '%s', got '%s'", mig, chkSum, c)
 			}
 		}
 	}
