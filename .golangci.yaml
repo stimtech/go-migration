@@ -15,6 +15,7 @@ linters:
     - contextcheck
     - errname
     - errorlint
+    - forbidigo
     - gci
     - gocritic
     - godot
