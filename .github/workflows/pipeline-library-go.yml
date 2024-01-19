@@ -31,7 +31,7 @@ jobs:
   go-analyze:
     name: Analyze Go
     needs: configuration
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 5
     steps:
       - name: Check out code
