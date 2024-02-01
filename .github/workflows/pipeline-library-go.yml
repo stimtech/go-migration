@@ -11,7 +11,7 @@ on:
 jobs:
   configuration:
     name: Gather configuration
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 5
     outputs:
       action_config: ${{ steps.action_config.outputs.data }}
@@ -31,7 +31,7 @@ jobs:
   go-analyze:
     name: Analyze Go
     needs: configuration
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 5
     steps:
       - name: Check out code
@@ -82,7 +82,7 @@ jobs:
       - go-analyze
       - integration-test
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Check out action
         uses: actions/checkout@v3
