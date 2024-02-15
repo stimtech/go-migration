@@ -33,7 +33,6 @@ linters:
     - wastedassign
     - whitespace
     - wsl
-    - revive
     # @todo Proceed to check which ones require extra configuration.
 
 linters-settings:
