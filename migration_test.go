@@ -41,6 +41,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
+
 			defer func() { _ = db.Close() }()
 
 			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/init"})
@@ -54,6 +55,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err, "could not query for tables") {
 				return
 			}
+
 			assert.Equal(t, []string{"migration", "migration_lock", "test"}, tables)
 		})
 
@@ -62,6 +64,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
+
 			defer func() { _ = db.Close() }()
 
 			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/init"})
@@ -73,6 +76,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err, "could not query for tables") {
 				return
 			}
+
 			assert.Equal(t, []string{"migration", "migration_lock", "test"}, tables)
 		})
 
@@ -81,6 +85,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
+
 			defer func() { _ = db.Close() }()
 
 			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/diff-init"})
@@ -92,6 +97,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err, "could not query for tables") {
 				return
 			}
+
 			assert.Equal(t, []string{"migration", "migration_lock", "test"}, tables)
 		})
 
@@ -100,6 +106,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
+
 			defer func() { _ = db.Close() }()
 
 			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/multi"})
@@ -111,6 +118,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err, "could not query for tables") {
 				return
 			}
+
 			assert.Equal(t, []string{"migration", "migration_lock", "multi", "multi2", "test"}, tables)
 		})
 
@@ -119,6 +127,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
+
 			defer func() { _ = db.Close() }()
 
 			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "."},
@@ -131,6 +140,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err, "could not query for tables") {
 				return
 			}
+
 			if d == MySQL { // MySQL can't roll back DDL statements
 				assert.Equal(t, []string{"migration", "migration_lock", "multi", "multi2", "should_rollback", "test"}, tables)
 			} else {
@@ -143,12 +153,14 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
+
 			defer func() { _ = db.Close() }()
 
 			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/no-folder"})
 
 			err = s.Migrate()
 			assert.Error(t, err)
+
 			if assert.Error(t, err) {
 				assert.True(t, strings.Contains(err.Error(), "failed to list available migrations"))
 			}
@@ -159,6 +171,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
+
 			defer func() { _ = db.Close() }()
 
 			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/no-access"})
@@ -177,6 +190,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
+
 			defer func() { _ = db.Close() }()
 
 			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/code-based"}, FuncMigrationOption{
@@ -239,6 +253,7 @@ func TestService_Migrate(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
+
 			defer func() { _ = db.Close() }()
 
 			s := New(db, ZapOption{Logger: zap.NewNop()}, Config{MigrationFolder: "test/code-based-fail"}, FuncMigrationOption{
