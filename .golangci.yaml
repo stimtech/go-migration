@@ -7,7 +7,7 @@ linters:
     - staticcheck
     - typecheck
     - unused
-    
+
     # Optional linters, which we choose to apply additionally.
     - bodyclose
     - bidichk
