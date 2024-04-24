@@ -13,7 +13,7 @@ import (
 
 // Simple example app with a zap logger
 // An sqlite database will be created, and a table added.
-// Run with 'go run basic.go'.
+// Run with 'go run zap.go'.
 // Two migrations are present in db/migration and will be loaded into the db in alphabetical order.
 
 func main() {
