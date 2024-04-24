@@ -20,6 +20,7 @@ func Test_slogLogger_Info(t *testing.T) {
 
 	l := slogLogger{logger: slog.New(mockLog)}
 	l.Info("test message")
+
 	if assert.Len(t, mockLog.Infos, 1) {
 		assert.Equal(t, "test message", mockLog.Infos[0])
 	}
