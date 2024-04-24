@@ -1,13 +1,13 @@
 module github.com/stimtech/go-migration/v2
 
-go 1.19
+go 1.22
 
 require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/jackc/pgx/v4 v4.11.0
 	github.com/mattn/go-sqlite3 v1.14.9
 	github.com/stretchr/testify v1.8.1
-	go.uber.org/zap v1.26.0
+	go.uber.org/zap v1.27.0
 )
 
 require (
