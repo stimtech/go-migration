@@ -15,8 +15,7 @@ Add your SQL files to the `db/migrations` directory.
 Create the migration service using an (in this example, sqlite) `*sql.DB`
 ``` go
 db, err := sql.Open("sqlite3", "db.sqlite")
-logger, err := zap.NewProduction()
-m := migration.New(db, logger) // use zap.NewNop() if you don't want logs
+m := migration.New(db)
 ```
 Then start the migration
 ``` go
@@ -50,7 +49,7 @@ These are settings that can be configured.
 - `MigrationFolder`: the folder where all migration SQL files are. Defaults to `db/migrations`
 - `LockTimeoutMinutes`: how long a lock can be held before it times out, in minutes. Defaults to 15
 
-You can also use the `LoggerOption` or `ZapOption` to use a specific logger.
+You can also use the `LoggerOption`, `SlogOption` or `ZapOption` to use a specific logger.
 
 There is also an `FSOption` that can be used in conjunction with `MigrationFolder` to use an embedded file system.
 
