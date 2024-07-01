@@ -11,4 +11,3 @@ updates:
       - "stimtech/team-brown"
     pull-request-branch-name:
       separator: "-"
-
