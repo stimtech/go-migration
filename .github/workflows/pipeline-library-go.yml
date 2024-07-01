@@ -5,7 +5,8 @@ name: Pipeline
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -17,7 +18,7 @@ jobs:
       action_config: ${{ steps.action_config.outputs.data }}
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Read STIM action configuration
         id: action_config
@@ -35,18 +36,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
-
-      - name: Check out action
-        uses: actions/checkout@v3
-        with:
-          repository: stimtech/action-go-analyze
-          ref: 4
-          path: ./.github/actions/go-analyze
-          token: ${{ secrets.GH_PAT }}
+        uses: actions/checkout@v4
 
       - name: Analyze Go
-        uses: ./.github/actions/go-analyze
+        uses: stimtech/action-go-analyze@v5
         with:
           codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           gh_credentials: ${{ secrets.GIT_CREDENTIALS }}
@@ -58,18 +51,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
-
-      - name: Check out action
-        uses: actions/checkout@v3
-        with:
-          repository: stimtech/action-go-integration-test
-          ref: 3
-          path: ./.github/actions/go-integration-test
-          token: ${{ secrets.GH_PAT }}
+        uses: actions/checkout@v4
 
       - name: Run integration tests
-        uses: ./.github/actions/go-integration-test
+        uses: stimtech/action-go-integration-test@v4
         with:
           gh_credentials: ${{ secrets.GIT_CREDENTIALS }}
           bitbucket_credentials: ${{ secrets.BITBUCKET_GIT_CREDENTIALS }}
@@ -84,16 +69,8 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Check out action
-        uses: actions/checkout@v3
-        with:
-          repository: stimtech/action-pipeline-complete
-          ref: 2
-          path: ./.github/actions/pipeline-complete
-          token: ${{ secrets.GH_PAT }}
-
       - name: Pipeline Complete
-        uses: ./.github/actions/pipeline-complete
+        uses: stimtech/action-pipeline-complete@v2
         with:
           token: ${{ secrets.GH_PAT }}
           secrets: ${{ toJSON(secrets) }}
